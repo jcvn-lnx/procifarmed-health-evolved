@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import procifarmedLogo from "@/assets/procifarmed-logo.jpg";
+import procifarmedLogo from "@/assets/procifarmed-logo-header.png";
 import { Search, ShoppingBag, Trash2, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -34,11 +34,11 @@ export function SiteHeader() {
       <Container className="flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <NavLink to="/" className="flex items-center gap-3" aria-label="Procifarmed">
-            <div className="grid size-9 place-items-center overflow-hidden rounded-lg bg-card shadow-elev1">
+            <div className="grid size-10 place-items-center overflow-hidden rounded-full border bg-background shadow-elev1">
               <img
                 src={procifarmedLogo}
                 alt="Logo Procifarmed"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain p-1"
                 decoding="async"
               />
             </div>
