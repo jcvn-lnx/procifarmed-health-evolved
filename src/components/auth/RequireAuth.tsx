@@ -13,7 +13,13 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
     }
   }, [loading, user, navigate, location.pathname]);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center text-sm text-muted-foreground">
+        Carregando...
+      </div>
+    );
+  }
   if (!user) return null;
   return <>{children}</>;
 }

@@ -54,9 +54,14 @@ export function RequireAdmin({ children }: { children: React.ReactNode }) {
     };
   }, [authLoading, user, navigate, location.pathname]);
 
-  if (authLoading) return null;
+  if (authLoading || checking) {
+    return (
+      <div className="min-h-[60vh] grid place-items-center text-sm text-muted-foreground">
+        Verificando permissões...
+      </div>
+    );
+  }
   if (!user) return null;
-  if (checking) return null;
   if (!isAdmin) return null;
 
   return <>{children}</>;
