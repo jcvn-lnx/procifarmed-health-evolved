@@ -86,13 +86,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Ensure listener is ready before initial session fetch
-    supabase.auth
-      .getSession()
-      .then(({ data }) => {
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
-      })
-      .finally(() => setLoading(false));
+    (async () => {
+      const timeoutMs = 8000;
+      try {
+        const result = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<{ data: { session: Session | null } }>((_, reject) =>
+            setTimeout(() => reject(new Error("getSession_timeout")), timeoutMs),
+          ),
+        ]);
+
+        setSession(result.data.session);
+        setUser(result.data.session?.user ?? null);
+      } catch {
+        // If we can't fetch session, fail open (unauthenticated) but unblock UI
+        setSession(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    })();
 
     return () => {
       sub.subscription.unsubscribe();
