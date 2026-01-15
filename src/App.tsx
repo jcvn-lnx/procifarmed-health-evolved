@@ -10,29 +10,46 @@ import { ShopPage } from "@/pages/Shop";
 import { ProductPage } from "@/pages/Product";
 import { AboutPage } from "@/pages/About";
 import { ContactPage } from "@/pages/Contact";
+import { AuthProvider } from "@/context/AuthContext";
+import { LoginPage } from "@/pages/Login";
+import { SignupPage } from "@/pages/Signup";
+import { CheckoutPage } from "@/pages/Checkout";
+import { OrderPage } from "@/pages/Order";
+import { AccountPage } from "@/pages/Account";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <CartProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/loja" element={<ShopPage />} />
-            <Route path="/produto/:id" element={<ProductPage />} />
-            <Route path="/institucional" element={<AboutPage />} />
-            <Route path="/contato" element={<ContactPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/loja" element={<ShopPage />} />
+              <Route path="/produto/:id" element={<ProductPage />} />
+              <Route path="/institucional" element={<AboutPage />} />
+              <Route path="/contato" element={<ContactPage />} />
+
+              <Route path="/entrar" element={<LoginPage />} />
+              <Route path="/cadastrar" element={<SignupPage />} />
+
+              <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/pedido/:id" element={<OrderPage />} />
+              <Route path="/conta" element={<AccountPage />} />
+
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </CartProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
 
 export default App;
+

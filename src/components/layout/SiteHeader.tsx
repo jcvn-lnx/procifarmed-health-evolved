@@ -4,16 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import procifarmedLogo from "@/assets/procifarmed-logo.jpg";
-import { Search, ShoppingBag, Trash2 } from "lucide-react";
+import { Search, ShoppingBag, Trash2, UserRound } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function SiteHeader() {
+  const { user } = useAuth();
   const { items, count, subtotalCents, remove, setQuantity } = useCart();
   const [q, setQ] = useState("");
+  const navigate = useNavigate();
 
   const topLinks = useMemo(
     () => [
@@ -146,12 +150,15 @@ export function SiteHeader() {
                   <div className="font-display text-lg font800">{formatBRL(subtotalCents)}</div>
                 </div>
 
-                <Button variant="brand" className={cn("w-full", items.length === 0 && "opacity-50")} disabled={items.length === 0}>
-                  Finalizar compra (demo)
+                <Button
+                  variant="brand"
+                  className={cn("w-full", items.length === 0 && "opacity-50")}
+                  disabled={items.length === 0}
+                  onClick={() => navigate("/checkout")}
+                >
+                  Finalizar compra
                 </Button>
-                <p className="text-xs text-muted-foreground">
-                  Este protótipo demonstra a experiência de e-commerce. Checkout e pagamentos podem ser conectados na próxima etapa.
-                </p>
+
               </div>
             </SheetContent>
           </Sheet>
