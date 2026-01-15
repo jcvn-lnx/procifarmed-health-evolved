@@ -20,15 +20,26 @@ export function LoginPage() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
+    const timeoutMs = 10000;
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await Promise.race([
+        supabase.auth.signInWithPassword({ email, password }),
+        new Promise<{ error: Error }>((_, reject) => setTimeout(() => reject(new Error("login_timeout")), timeoutMs)),
+      ]);
+
       if (error) throw error;
+
       toast.success("Login realizado com sucesso.");
-      navigate(from, { replace: true });
+
+      // Destrava UI antes de navegar (evita ficar preso em "Entrando..." caso a rota demore)
+      setLoading(false);
+      queueMicrotask(() => navigate(from, { replace: true }));
     } catch (err: any) {
-      toast.error(err?.message ?? "Não foi possível entrar.");
-    } finally {
+      toast.error(err?.message === "login_timeout" ? "Tempo esgotado ao entrar. Tente novamente." : err?.message ?? "Não foi possível entrar.");
       setLoading(false);
     }
   };
@@ -50,7 +61,7 @@ export function LoginPage() {
               <Label htmlFor="password">Senha</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
             </div>
-            <Button variant="brand" className="w-full" disabled={loading}>
+            <Button type="submit" variant="brand" className="w-full" disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
