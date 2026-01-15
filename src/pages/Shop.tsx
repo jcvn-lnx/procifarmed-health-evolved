@@ -7,15 +7,17 @@ import { products } from "@/data/catalog";
 import { useMemo, useState } from "react";
 
 const toNumberOrUndefined = (v: string) => {
-  const n = Number(v.replace(",", "."));
+  const raw = v.trim();
+  if (!raw) return undefined;
+  const n = Number(raw.replace(",", "."));
   return Number.isFinite(n) ? n : undefined;
 };
 
 export function ShopPage() {
   const [filters, setFilters] = useState<ShopFilters>({
     q: "",
-    category: "",
-    purpose: "",
+    category: "all",
+    purpose: "all",
     min: "",
     max: "",
   });
@@ -27,8 +29,8 @@ export function ShopPage() {
 
     return products.filter((p) => {
       if (q && !(`${p.name} ${p.shortDescription} ${p.sku}`.toLowerCase().includes(q))) return false;
-      if (filters.category && p.category !== filters.category) return false;
-      if (filters.purpose && p.purpose !== filters.purpose) return false;
+      if (filters.category !== "all" && p.category !== filters.category) return false;
+      if (filters.purpose !== "all" && p.purpose !== filters.purpose) return false;
 
       const price = p.priceCents / 100;
       if (min !== undefined && price < min) return false;

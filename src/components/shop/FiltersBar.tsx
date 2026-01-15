@@ -30,7 +30,7 @@ export function FiltersBar({ value, onChange }: { value: ShopFilters; onChange: 
             <SelectValue placeholder="Todas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             {categories.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
@@ -47,7 +47,7 @@ export function FiltersBar({ value, onChange }: { value: ShopFilters; onChange: 
             <SelectValue placeholder="Todas" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Todas</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
             {purposes.map((p) => (
               <SelectItem key={p} value={p}>
                 {p}
