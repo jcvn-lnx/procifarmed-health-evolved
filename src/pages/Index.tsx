@@ -7,14 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
-import { catalogHero, products } from "@/data/catalog";
+import { catalogHero } from "@/data/catalog";
 import heroPharmacist from "@/assets/hero-slide-pharmacy.jpg";
 import { NavLink } from "@/components/NavLink";
+import { useStoreProducts } from "@/hooks/useStoreProducts";
 import { ArrowRight, BadgeCheck, ShieldCheck, Stethoscope, Truck } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const Index = () => {
-  const featured = products.filter((p) => p.isFeatured);
+  const { data: products = [] } = useStoreProducts();
+  const featured = products.slice(0, 4);
 
   const heroSlides = useMemo(
     () => [
@@ -51,7 +53,6 @@ const Index = () => {
       carouselApi.off("reInit", onSelect);
     };
   }, [carouselApi]);
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -117,10 +118,7 @@ const Index = () => {
                         <img
                           src={s.src}
                           alt={s.alt}
-                          className={
-                            "h-[320px] w-full object-cover md:h-[460px] " +
-                            (idx === selectedIndex ? "animate-fade-up" : "")
-                          }
+                          className={"h-[320px] w-full object-cover md:h-[460px] " + (idx === selectedIndex ? "animate-fade-up" : "")}
                           loading={idx === 0 ? "eager" : "lazy"}
                         />
                       </CarouselItem>
