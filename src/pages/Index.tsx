@@ -5,13 +5,53 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 import { Separator } from "@/components/ui/separator";
 import { catalogHero, products } from "@/data/catalog";
-import { ShieldCheck, Truck, BadgeCheck, Stethoscope, ArrowRight } from "lucide-react";
+import heroPharmacist from "@/assets/hero-slide-pharmacy.jpg";
 import { NavLink } from "@/components/NavLink";
+import { ArrowRight, BadgeCheck, ShieldCheck, Stethoscope, Truck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 const Index = () => {
   const featured = products.filter((p) => p.isFeatured);
+
+  const heroSlides = useMemo(
+    () => [
+      {
+        src: catalogHero.imageSrc,
+        alt: catalogHero.imageAlt,
+      },
+      {
+        src: heroPharmacist,
+        alt: "Profissional de saúde em ambiente de farmácia.",
+      },
+    ],
+    [],
+  );
+
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const onSelect = () => setSelectedIndex(carouselApi.selectedScrollSnap());
+    onSelect();
+    carouselApi.on("select", onSelect);
+    carouselApi.on("reInit", onSelect);
+
+    const autoplay = window.setInterval(() => {
+      carouselApi.scrollNext();
+    }, 5500);
+
+    return () => {
+      window.clearInterval(autoplay);
+      carouselApi.off("select", onSelect);
+      carouselApi.off("reInit", onSelect);
+    };
+  }, [carouselApi]);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,13 +109,26 @@ const Index = () => {
             </div>
 
             <div className="md:col-span-6">
-              <Card className="overflow-hidden shadow-elev2">
-                <img
-                  src={catalogHero.imageSrc}
-                  alt={catalogHero.imageAlt}
-                  className="h-[320px] w-full object-cover md:h-[460px]"
-                  loading="eager"
-                />
+              <Card className="relative overflow-hidden shadow-elev2">
+                <Carousel setApi={setCarouselApi} opts={{ loop: true }}>
+                  <CarouselContent>
+                    {heroSlides.map((s, idx) => (
+                      <CarouselItem key={s.alt}>
+                        <img
+                          src={s.src}
+                          alt={s.alt}
+                          className={
+                            "h-[320px] w-full object-cover md:h-[460px] " +
+                            (idx === selectedIndex ? "animate-fade-up" : "")
+                          }
+                          loading={idx === 0 ? "eager" : "lazy"}
+                        />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-3" aria-label="Imagem anterior" />
+                  <CarouselNext className="right-3" aria-label="Próxima imagem" />
+                </Carousel>
               </Card>
               <p className="mt-3 text-xs text-muted-foreground">
                 Referência visual institucional. Imagens e produtos são exemplos para demonstração.
