@@ -138,16 +138,19 @@ Os arquivos otimizados estarão em `dist/`
 sudo nano /etc/nginx/sites-available/procifarmed
 ```
 
-Cole a seguinte configuração:
+Cole a seguinte configuração (inclui **no-cache** para `index.html` e cache agressivo para assets; isso evita ficar com CSS antigo e “mudar a fonte” em produção):
 
 ```nginx
 server {
     listen 80;
     listen [::]:80;
     server_name seu-dominio.com www.seu-dominio.com;
-    
+
     root /var/www/procifarmed/dist;
     index index.html;
+
+    # Importante: mime types (garante woff/woff2 com Content-Type correto)
+    include /etc/nginx/mime.types;
 
     # Gzip compression
     gzip on;
@@ -155,7 +158,13 @@ server {
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript application/json;
 
-    # Cache static assets
+    # NÃO cachear HTML (evita servir HTML antigo apontando pra bundles antigos)
+    location = /index.html {
+        add_header Cache-Control "no-store, no-cache, must-revalidate" always;
+        try_files $uri =404;
+    }
+
+    # Cache static assets (bundles com hash)
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
         expires 1y;
         add_header Cache-Control "public, immutable";
