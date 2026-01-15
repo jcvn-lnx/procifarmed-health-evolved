@@ -74,6 +74,21 @@ sudo -u postgres pg_dump -Fc procifarmed > /var/backups/procifarmed.dump
 # sudo -u postgres pg_restore -d procifarmed --clean /var/backups/procifarmed.dump
 ```
 
+### 4.3. Migrações do banco (IMPORTANTE)
+
+O deploy do **frontend** (Nginx + `dist/`) **não** executa migrações automaticamente.
+As migrações devem ser rodadas pelo **seu backend** (ex.: Prisma, Knex, Flyway, Liquibase) como parte do deploy.
+
+Exemplos (ajuste para sua stack):
+
+```bash
+# Exemplo Prisma
+# npx prisma migrate deploy
+
+# Exemplo Knex
+# npx knex migrate:latest
+```
+
 ## 5. Preparar a Aplicação
 
 ### 5.1. Clonar ou Transferir o Código
