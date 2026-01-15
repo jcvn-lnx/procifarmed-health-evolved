@@ -1,12 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { mapDbProductToCatalogProduct, type DbProduct } from "@/lib/productMapper";
+import { useCallback, useEffect, useState } from "react";
 
-export function useStoreProducts() {
-  return useQuery({
-    queryKey: ["store", "products"],
-    queryFn: async () => {
-      const { data, error } = await supabase
+type StoreProductsState<T> = {
+  data: T;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+};
+
+export function useStoreProducts(): StoreProductsState<ReturnType<typeof mapDbProductToCatalogProduct>[]> {
+  const [data, setData] = useState<ReturnType<typeof mapDbProductToCatalogProduct>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetcher = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data: rows, error } = await supabase
         .from("products")
         .select("id,sku,name,category,purpose,price_cents,image_url,image_alt,short_description,description,is_active")
         .eq("is_active", true)
@@ -14,20 +26,39 @@ export function useStoreProducts() {
         .limit(500);
 
       if (error) throw error;
-      const rows = (data ?? []) as DbProduct[];
-      return rows.map(mapDbProductToCatalogProduct);
-    },
-    staleTime: 60_000,
-    retry: 1,
-  });
+      const mapped = ((rows ?? []) as DbProduct[]).map(mapDbProductToCatalogProduct);
+      setData(mapped);
+    } catch (e: any) {
+      setError(e instanceof Error ? e : new Error(e?.message ?? "Erro ao carregar produtos"));
+      setData([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetcher();
+  }, [fetcher]);
+
+  return { data, isLoading, error, refetch: fetcher };
 }
 
-export function useStoreProduct(productId?: string) {
-  return useQuery({
-    queryKey: ["store", "product", productId ?? null],
-    enabled: Boolean(productId),
-    queryFn: async () => {
-      const { data, error } = await supabase
+export function useStoreProduct(productId?: string): StoreProductsState<ReturnType<typeof mapDbProductToCatalogProduct> | null> {
+  const [data, setData] = useState<ReturnType<typeof mapDbProductToCatalogProduct> | null>(null);
+  const [isLoading, setIsLoading] = useState(Boolean(productId));
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetcher = useCallback(async () => {
+    if (!productId) {
+      setData(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data: row, error } = await supabase
         .from("products")
         .select("id,sku,name,category,purpose,price_cents,image_url,image_alt,short_description,description,is_active")
         .eq("id", productId)
@@ -35,10 +66,18 @@ export function useStoreProduct(productId?: string) {
         .maybeSingle();
 
       if (error) throw error;
-      if (!data) return null;
-      return mapDbProductToCatalogProduct(data as DbProduct);
-    },
-    staleTime: 60_000,
-    retry: 1,
-  });
+      setData(row ? mapDbProductToCatalogProduct(row as DbProduct) : null);
+    } catch (e: any) {
+      setError(e instanceof Error ? e : new Error(e?.message ?? "Erro ao carregar produto"));
+      setData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [productId]);
+
+  useEffect(() => {
+    fetcher();
+  }, [fetcher]);
+
+  return { data, isLoading, error, refetch: fetcher };
 }
