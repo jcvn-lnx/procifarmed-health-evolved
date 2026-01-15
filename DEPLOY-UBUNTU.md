@@ -1,0 +1,273 @@
+# Deploy em Servidor Ubuntu
+
+Guia completo para fazer deploy da aplicação Procifarmed em um servidor Linux Ubuntu.
+
+## Pré-requisitos
+
+- Servidor Ubuntu 20.04+ com acesso root ou sudo
+- Domínio apontando para o IP do servidor
+- Acesso SSH ao servidor
+
+## 1. Atualizar o Sistema
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+```
+
+## 2. Instalar Node.js
+
+Instale o Node.js 18+ usando NodeSource:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+Verifique a instalação:
+
+```bash
+node --version
+npm --version
+```
+
+## 3. Instalar e Configurar Nginx
+
+```bash
+sudo apt install nginx -y
+sudo systemctl enable nginx
+sudo systemctl start nginx
+```
+
+## 4. Preparar a Aplicação
+
+### 4.1. Clonar ou Transferir o Código
+
+Se estiver usando Git:
+
+```bash
+cd /var/www
+sudo git clone <seu-repositorio> procifarmed
+cd procifarmed
+```
+
+Ou transfira os arquivos via SCP/SFTP para `/var/www/procifarmed`
+
+### 4.2. Configurar Variáveis de Ambiente
+
+Crie o arquivo `.env` na raiz do projeto:
+
+```bash
+sudo nano .env
+```
+
+Adicione as variáveis (obtenha os valores do seu projeto Lovable):
+
+```env
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY=sua-chave-publica-aqui
+```
+
+### 4.3. Instalar Dependências e Build
+
+```bash
+sudo npm install
+sudo npm run build
+```
+
+Os arquivos otimizados estarão em `dist/`
+
+## 5. Configurar Nginx
+
+### 5.1. Criar Configuração do Site
+
+```bash
+sudo nano /etc/nginx/sites-available/procifarmed
+```
+
+Cole a seguinte configuração:
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name seu-dominio.com www.seu-dominio.com;
+    
+    root /var/www/procifarmed/dist;
+    index index.html;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/javascript application/json;
+
+    # Cache static assets
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # SPA routing - redireciona todas as rotas para index.html
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+}
+```
+
+### 5.2. Ativar o Site
+
+```bash
+sudo ln -s /etc/nginx/sites-available/procifarmed /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+## 6. Configurar SSL com Let's Encrypt (Recomendado)
+
+### 6.1. Instalar Certbot
+
+```bash
+sudo apt install certbot python3-certbot-nginx -y
+```
+
+### 6.2. Obter Certificado SSL
+
+```bash
+sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com
+```
+
+Siga as instruções interativas. O Certbot configurará automaticamente o HTTPS.
+
+### 6.3. Renovação Automática
+
+O Certbot instala um cron/timer automático. Teste a renovação:
+
+```bash
+sudo certbot renew --dry-run
+```
+
+## 7. Configurar Firewall (Opcional mas Recomendado)
+
+```bash
+sudo ufw allow 'Nginx Full'
+sudo ufw allow OpenSSH
+sudo ufw enable
+```
+
+## 8. Monitoramento e Logs
+
+### Ver logs do Nginx
+
+```bash
+# Logs de acesso
+sudo tail -f /var/log/nginx/access.log
+
+# Logs de erro
+sudo tail -f /var/log/nginx/error.log
+```
+
+### Verificar status do Nginx
+
+```bash
+sudo systemctl status nginx
+```
+
+## 9. Atualizações Futuras
+
+Para atualizar a aplicação após mudanças:
+
+```bash
+cd /var/www/procifarmed
+
+# Atualizar código (se usando git)
+sudo git pull
+
+# Reinstalar dependências (se necessário)
+sudo npm install
+
+# Rebuild
+sudo npm run build
+
+# Recarregar nginx
+sudo systemctl reload nginx
+```
+
+## 10. Otimizações Adicionais
+
+### 10.1. Configurar Swap (para servidores com pouca RAM)
+
+```bash
+sudo fallocate -l 2G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
+### 10.2. Rate Limiting no Nginx (proteção contra DDoS)
+
+Adicione ao bloco `http` em `/etc/nginx/nginx.conf`:
+
+```nginx
+limit_req_zone $binary_remote_addr zone=limitreq:20m rate=10r/s;
+limit_req zone=limitreq burst=20 nodelay;
+```
+
+## 11. Troubleshooting
+
+### Problema: "502 Bad Gateway"
+- Verifique se o build foi feito corretamente: `ls -la /var/www/procifarmed/dist`
+- Verifique permissões: `sudo chown -R www-data:www-data /var/www/procifarmed/dist`
+
+### Problema: Rotas retornam 404
+- Certifique-se que `try_files $uri $uri/ /index.html;` está na config do nginx
+
+### Problema: Variáveis de ambiente não funcionam
+- Variáveis `VITE_*` precisam estar no `.env` **antes** do build
+- Refaça o build após alterar o `.env`
+
+### Problema: Supabase não conecta
+- Verifique se as URLs permitidas incluem seu domínio no painel do Supabase
+- Confirme que as variáveis `VITE_SUPABASE_*` estão corretas
+
+## 12. Segurança Adicional
+
+### Bloquear acesso a arquivos sensíveis
+
+Adicione à config do nginx:
+
+```nginx
+location ~ /\. {
+    deny all;
+}
+
+location ~ \.(env|log|sql)$ {
+    deny all;
+}
+```
+
+### Fail2ban (proteção contra brute force)
+
+```bash
+sudo apt install fail2ban -y
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+```
+
+## Recursos
+
+- [Documentação Nginx](https://nginx.org/en/docs/)
+- [Let's Encrypt](https://letsencrypt.org/)
+- [Vite Production Build](https://vitejs.dev/guide/build.html)
+- [Supabase Docs](https://supabase.com/docs)
+
+---
+
+**Importante:** Sempre faça backup antes de mudanças críticas e teste em ambiente de staging quando possível.
