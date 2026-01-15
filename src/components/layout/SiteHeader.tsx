@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import procifarmedLogo from "@/assets/procifarmed-logo.jpg";
 import { Search, ShoppingBag, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -28,9 +29,14 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <Container className="flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <NavLink to="/" className="flex items-center gap-2" aria-label="Procifarmed">
-            <div className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground shadow-elev1">
-              <span className="font-display text-sm font800 tracking-tight">P</span>
+          <NavLink to="/" className="flex items-center gap-3" aria-label="Procifarmed">
+            <div className="grid size-9 place-items-center overflow-hidden rounded-lg bg-card shadow-elev1">
+              <img
+                src={procifarmedLogo}
+                alt="Logo Procifarmed"
+                className="h-full w-full object-cover"
+                decoding="async"
+              />
             </div>
             <div className="leading-tight">
               <div className="font-display text-sm font800 tracking-tight">Procifarmed</div>
@@ -38,6 +44,7 @@ export function SiteHeader() {
             </div>
           </NavLink>
         </div>
+
 
         <nav className="hidden items-center gap-1 md:flex">
           {topLinks.map((l) => (
