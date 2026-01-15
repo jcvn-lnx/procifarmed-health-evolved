@@ -1,6 +1,7 @@
-# Deploy em Servidor Ubuntu
+# Deploy em Servidor Ubuntu (Frontend + Backend próprio + PostgreSQL)
 
-Guia completo para fazer deploy da aplicação Procifarmed em um servidor Linux Ubuntu.
+Guia para fazer deploy do **frontend (Vite/React)** e do seu **backend próprio (API)** em um servidor Linux Ubuntu, usando **PostgreSQL** como banco de dados.
+
 
 ## Pré-requisitos
 
@@ -39,9 +40,43 @@ sudo systemctl enable nginx
 sudo systemctl start nginx
 ```
 
-## 4. Preparar a Aplicação
+## 4. Instalar e Configurar PostgreSQL
 
-### 4.1. Clonar ou Transferir o Código
+> Esta seção é para o **seu servidor** (onde o Postgres vai rodar). Se você vai usar Postgres em outro host, pule e apenas ajuste o backend com a URL correta.
+
+```bash
+sudo apt install postgresql postgresql-contrib -y
+sudo systemctl enable postgresql
+sudo systemctl start postgresql
+```
+
+### 4.1. Criar usuário e banco
+
+> Troque `procifarmed` e `SENHA_FORTE_AQUI` conforme sua necessidade.
+
+```bash
+sudo -u postgres psql <<'SQL'
+create user procifarmed with password 'SENHA_FORTE_AQUI';
+create database procifarmed owner procifarmed;
+\c procifarmed
+-- extensões comuns (opcional)
+create extension if not exists pgcrypto;
+SQL
+```
+
+### 4.2. Backup e restore (recomendado)
+
+```bash
+# backup
+sudo -u postgres pg_dump -Fc procifarmed > /var/backups/procifarmed.dump
+
+# restore
+# sudo -u postgres pg_restore -d procifarmed --clean /var/backups/procifarmed.dump
+```
+
+## 5. Preparar a Aplicação
+
+### 5.1. Clonar ou Transferir o Código
 
 Se estiver usando Git:
 
@@ -53,7 +88,10 @@ cd procifarmed
 
 Ou transfira os arquivos via SCP/SFTP para `/var/www/procifarmed`
 
-### 4.2. Configurar Variáveis de Ambiente
+### 5.2. Configurar Variáveis de Ambiente (Frontend)
+
+> Como você vai usar **backend próprio + PostgreSQL**, o frontend **não** deve ter credenciais de banco.
+> Ele apenas aponta para a URL da sua API.
 
 Crie o arquivo `.env` na raiz do projeto:
 
@@ -61,14 +99,14 @@ Crie o arquivo `.env` na raiz do projeto:
 sudo nano .env
 ```
 
-Adicione as variáveis (obtenha os valores do seu projeto Lovable):
+Exemplo (ajuste a URL/porta da sua API):
 
 ```env
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sua-chave-publica-aqui
+# URL base da sua API (backend próprio)
+VITE_API_URL=http://localhost:3000
 ```
 
-### 4.3. Instalar Dependências e Build
+### 5.3. Instalar Dependências e Build
 
 ```bash
 sudo npm install
@@ -77,9 +115,9 @@ sudo npm run build
 
 Os arquivos otimizados estarão em `dist/`
 
-## 5. Configurar Nginx
+## 6. Configurar Nginx
 
-### 5.1. Criar Configuração do Site
+### 6.1. Criar Configuração do Site
 
 ```bash
 sudo nano /etc/nginx/sites-available/procifarmed
@@ -121,7 +159,7 @@ server {
 }
 ```
 
-### 5.2. Ativar o Site
+### 6.2. Ativar o Site
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/procifarmed /etc/nginx/sites-enabled/
@@ -129,15 +167,15 @@ sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-## 6. Configurar SSL com Let's Encrypt (Recomendado)
+## 7. Configurar SSL com Let's Encrypt (Recomendado)
 
-### 6.1. Instalar Certbot
+### 7.1. Instalar Certbot
 
 ```bash
 sudo apt install certbot python3-certbot-nginx -y
 ```
 
-### 6.2. Obter Certificado SSL
+### 7.2. Obter Certificado SSL
 
 ```bash
 sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com
@@ -145,7 +183,7 @@ sudo certbot --nginx -d seu-dominio.com -d www.seu-dominio.com
 
 Siga as instruções interativas. O Certbot configurará automaticamente o HTTPS.
 
-### 6.3. Renovação Automática
+### 7.3. Renovação Automática
 
 O Certbot instala um cron/timer automático. Teste a renovação:
 
@@ -153,7 +191,7 @@ O Certbot instala um cron/timer automático. Teste a renovação:
 sudo certbot renew --dry-run
 ```
 
-## 7. Configurar Firewall (Opcional mas Recomendado)
+## 8. Configurar Firewall (Opcional mas Recomendado)
 
 ```bash
 sudo ufw allow 'Nginx Full'
@@ -161,7 +199,7 @@ sudo ufw allow OpenSSH
 sudo ufw enable
 ```
 
-## 8. Monitoramento e Logs
+## 9. Monitoramento e Logs
 
 ### Ver logs do Nginx
 
@@ -179,7 +217,7 @@ sudo tail -f /var/log/nginx/error.log
 sudo systemctl status nginx
 ```
 
-## 9. Atualizações Futuras
+## 10. Atualizações Futuras
 
 Para atualizar a aplicação após mudanças:
 
@@ -199,9 +237,9 @@ sudo npm run build
 sudo systemctl reload nginx
 ```
 
-## 10. Otimizações Adicionais
+## 11. Otimizações Adicionais
 
-### 10.1. Configurar Swap (para servidores com pouca RAM)
+### 11.1. Configurar Swap (para servidores com pouca RAM)
 
 ```bash
 sudo fallocate -l 2G /swapfile
@@ -211,7 +249,7 @@ sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 ```
 
-### 10.2. Rate Limiting no Nginx (proteção contra DDoS)
+### 11.2. Rate Limiting no Nginx (proteção contra DDoS)
 
 Adicione ao bloco `http` em `/etc/nginx/nginx.conf`:
 
@@ -220,7 +258,7 @@ limit_req_zone $binary_remote_addr zone=limitreq:20m rate=10r/s;
 limit_req zone=limitreq burst=20 nodelay;
 ```
 
-## 11. Troubleshooting
+## 12. Troubleshooting
 
 ### Problema: "502 Bad Gateway"
 - Verifique se o build foi feito corretamente: `ls -la /var/www/procifarmed/dist`
@@ -233,11 +271,12 @@ limit_req zone=limitreq burst=20 nodelay;
 - Variáveis `VITE_*` precisam estar no `.env` **antes** do build
 - Refaça o build após alterar o `.env`
 
-### Problema: Supabase não conecta
-- Verifique se as URLs permitidas incluem seu domínio no painel do Supabase
-- Confirme que as variáveis `VITE_SUPABASE_*` estão corretas
+### Problema: Backend não responde
+- Verifique se sua API está rodando: `sudo systemctl status seu-backend`
+- Confirme que `VITE_API_URL` aponta para a porta/host corretos
+- Se estiver usando `http://localhost:3000` no `.env`, o backend **precisa estar rodando no mesmo servidor**
 
-## 12. Segurança Adicional
+## 13. Segurança Adicional
 
 ### Bloquear acesso a arquivos sensíveis
 
@@ -266,7 +305,7 @@ sudo systemctl start fail2ban
 - [Documentação Nginx](https://nginx.org/en/docs/)
 - [Let's Encrypt](https://letsencrypt.org/)
 - [Vite Production Build](https://vitejs.dev/guide/build.html)
-- [Supabase Docs](https://supabase.com/docs)
+- [PostgreSQL Docs](https://www.postgresql.org/docs/)
 
 ---
 
