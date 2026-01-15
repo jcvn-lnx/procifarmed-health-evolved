@@ -112,16 +112,16 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
-    font-family: theme("fontFamily.sans");
+    @apply bg-background text-foreground antialiased font-sans;
   }
 
   h1,
   h2,
   h3,
   h4 {
-    font-family: theme("fontFamily.display");
+    @apply font-display;
   }
+
 }
 
 @layer utilities {
