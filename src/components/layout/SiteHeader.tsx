@@ -33,19 +33,13 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/70">
       <Container className="flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <NavLink to="/" className="flex items-center gap-3" aria-label="Procifarmed">
-            <div className="grid size-10 place-items-center overflow-hidden rounded-full border bg-background shadow-elev1">
-              <img
-                src={procifarmedLogo}
-                alt="Logo Procifarmed"
-                className="h-full w-full object-contain p-1"
-                decoding="async"
-              />
-            </div>
-            <div className="leading-tight">
-              <div className="font-display text-sm font800 tracking-tight">Procifarmed</div>
-              <div className="text-xs text-muted-foreground">Saúde • Qualidade • Procedência</div>
-            </div>
+          <NavLink to="/" className="flex items-center" aria-label="Procifarmed">
+            <img
+              src={procifarmedLogo}
+              alt="Procifarmed"
+              className="h-10 w-auto"
+              decoding="async"
+            />
           </NavLink>
         </div>
 
