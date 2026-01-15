@@ -1,4 +1,4 @@
-import heroImg from "@/assets/procifarmed-hero.jpg";
+import heroImg from "@/assets/hero-slide-pharmacy.jpg";
 import prodVitaminas from "@/assets/prod-vitaminas.jpg";
 import prodTermometro from "@/assets/prod-termometro.jpg";
 import prodCreme from "@/assets/prod-creme.jpg";
@@ -17,7 +17,7 @@ export const purposes = ["Imunidade", "Dor & Febre", "Dermocosméticos", "Mediç
 
 export const catalogHero = {
   imageSrc: heroImg,
-  imageAlt: "Banner institucional da Procifarmed com estética médica clean.",
+  imageAlt: "Profissional de saúde em ambiente de farmácia.",
 };
 
 export const products: Product[] = [
