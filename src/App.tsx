@@ -16,6 +16,7 @@ import { SignupPage } from "@/pages/Signup";
 import { CheckoutPage } from "@/pages/Checkout";
 import { OrderPage } from "@/pages/Order";
 import { AccountPage } from "@/pages/Account";
+import { AdminPage } from "@/pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,8 @@ const App = () => (
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/pedido/:id" element={<OrderPage />} />
               <Route path="/conta" element={<AccountPage />} />
+
+              <Route path="/admin" element={<AdminPage />} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
