@@ -6,17 +6,29 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/CartContext";
-import { products } from "@/data/catalog";
+import { useStoreProduct } from "@/hooks/useStoreProducts";
 import { formatBRL } from "@/lib/format";
 import { AlertCircle } from "lucide-react";
-import { useMemo } from "react";
 import { useParams } from "react-router-dom";
 
 export function ProductPage() {
   const { id } = useParams();
   const { add } = useCart();
+  const { data: product, isLoading } = useStoreProduct(id);
 
-  const product = useMemo(() => products.find((p) => p.id === id), [id]);
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SiteHeader />
+        <main className="py-12">
+          <Container>
+            <div className="rounded-xl border bg-card p-6 text-sm text-muted-foreground shadow-elev1">Carregando...</div>
+          </Container>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -47,12 +59,7 @@ export function ProductPage() {
           <div className="grid gap-8 md:grid-cols-12">
             <div className="md:col-span-5">
               <Card className="overflow-hidden shadow-elev2">
-                <img
-                  src={product.imageSrc}
-                  alt={product.imageAlt}
-                  className="aspect-square w-full object-cover"
-                  loading="eager"
-                />
+                <img src={product.imageSrc} alt={product.imageAlt} className="aspect-square w-full object-cover" loading="eager" />
               </Card>
             </div>
 
@@ -84,29 +91,6 @@ export function ProductPage() {
               <section className="space-y-3">
                 <h2 className="font-display text-xl font800 tracking-tight">Descrição</h2>
                 <p className="text-sm leading-relaxed text-muted-foreground">{product.description}</p>
-              </section>
-
-              <section className="space-y-3">
-                <h2 className="font-display text-xl font800 tracking-tight">Informações técnicas</h2>
-                <div className="grid gap-3 rounded-xl border bg-card p-5 shadow-elev1 sm:grid-cols-2">
-                  {product.technicalInfo.map((it) => (
-                    <div key={it.label} className="rounded-lg border bg-background p-4">
-                      <div className="text-xs font-semibold text-muted-foreground">{it.label}</div>
-                      <div className="mt-1 text-sm font-bold">{it.value}</div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section className="space-y-3">
-                <h2 className="font-display text-xl font800 tracking-tight">Destaques</h2>
-                <ul className="grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
-                  {product.highlights.map((h) => (
-                    <li key={h} className="rounded-lg border bg-card p-4 shadow-elev1">
-                      {h}
-                    </li>
-                  ))}
-                </ul>
               </section>
 
               <div className="rounded-xl border bg-accent p-5 text-sm text-accent-foreground">
