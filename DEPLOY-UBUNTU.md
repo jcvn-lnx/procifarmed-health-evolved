@@ -138,7 +138,7 @@ Os arquivos otimizados estarão em `dist/`
 sudo nano /etc/nginx/sites-available/procifarmed
 ```
 
-Cole a seguinte configuração (inclui **no-cache** para `index.html` e cache agressivo para assets; isso evita ficar com CSS antigo e “mudar a fonte” em produção):
+Cole a seguinte configuração (inclui **no-cache** para `index.html`, cache agressivo para assets e **MIME correto para fontes**; isso evita CSS antigo e garante que `woff2` seja servido como `font/woff2`):
 
 ```nginx
 server {
@@ -151,6 +151,12 @@ server {
 
     # Importante: mime types (garante woff/woff2 com Content-Type correto)
     include /etc/nginx/mime.types;
+
+    # Fallback explícito (algumas distros não trazem woff2 no mime.types)
+    types {
+        font/woff2 woff2;
+        font/woff  woff;
+    }
 
     # Gzip compression
     gzip on;
